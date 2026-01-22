@@ -26,8 +26,13 @@
         .city-btn.active { border: 2px solid var(--heart-red); background: white; color: var(--heart-red); }
         .city-btn.visited::after { content: "❤️"; font-size: 10px; margin-left: 2px; }
 
+        /* 月曆與年份切換器 */
         .calendar-box { background: white; padding: 15px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
-        .calendar-title { font-size: 16px; font-weight: bold; color: var(--heart-red); margin-bottom: 10px; text-align: center; }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .year-btn { background: none; border: 1px solid var(--soft-pink); color: var(--heart-red); border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-weight: bold; }
+        .year-btn:hover { background: var(--soft-pink); }
+        .calendar-title { font-size: 16px; font-weight: bold; color: var(--heart-red); }
+        
         .month-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
         .month-btn { padding: 8px 0; border-radius: 8px; border: 1px solid #eee; font-size: 12px; text-align: center; cursor: pointer; transition: 0.2s; background: #fff; }
         .month-btn.has-data { background: #fff0f2; border-color: var(--soft-pink); font-weight: bold; }
@@ -69,7 +74,11 @@
         <div class="sidebar">
             <div class="city-grid" id="cityList"></div>
             <div class="calendar-box">
-                <div class="calendar-title" id="calYearTitle">🗓️ 冒險足跡</div>
+                <div class="calendar-header">
+                    <button class="year-btn" onclick="changeYear(-1)">‹</button>
+                    <div class="calendar-title" id="displayYear">2026</div>
+                    <button class="year-btn" onclick="changeYear(1)">›</button>
+                </div>
                 <div class="month-grid" id="monthGrid"></div>
             </div>
         </div>
@@ -85,17 +94,23 @@
     <script>
         const cities = ["基隆市", "台北市", "新北市", "桃園市", "新竹市", "新竹縣", "苗栗縣", "台中市", "彰化縣", "南投縣", "雲林縣", "嘉義市", "嘉義縣", "台南市", "高雄市", "屏東縣", "宜蘭縣", "花蓮縣", "台東縣", "澎湖縣", "金門縣", "馬祖"];
         const suggestions = ["去吃好吃的！", "找一間絕美咖啡廳", "來一趟大自然之旅", "去拍超多美照", "逛逛當地的夜市", "看海發呆一整個下午", "體驗在地手作課程", "找個浪漫景點放閃"];
-        const moodList = ["😊", "🥰", "🤩", "🥳", "🏖️", "🍦", "🚗"];
+        const moodList = ["😊", "🥰", "🤩", "🥳", "😚", "😋", "😤"];
         
-        // 自動獲取當前年份
-        const currentYear = new Date().getFullYear();
-        document.getElementById('calYearTitle').innerText = `🗓️ ${currentYear} 冒險足跡`;
-
+        // --- 狀態管理 ---
+        let viewYear = new Date().getFullYear(); // 目前切換到的年份
         let activeCity = "";
         let activeMonth = ""; 
         let selectedMood = "😊";
         let data = JSON.parse(localStorage.getItem('couple_photo_diary_v3') || '{}');
         let tempPhoto = "";
+
+        // --- 初始化功能 ---
+        function changeYear(delta) {
+            viewYear += delta;
+            document.getElementById('displayYear').innerText = viewYear;
+            activeMonth = ""; // 切換年份時取消選取的月份
+            refreshUI();
+        }
 
         function initCityList() {
             const list = document.getElementById('cityList');
@@ -113,16 +128,13 @@
         function initCalendar() {
             const grid = document.getElementById('monthGrid');
             grid.innerHTML = "";
-            
-            // 獲取所有紀錄
             const allEntries = Object.values(data).flat();
 
             for (let i = 1; i <= 12; i++) {
                 const monthStr = i < 10 ? `0${i}` : `${i}`;
-                const targetYM = `${currentYear}-${monthStr}`; // 例如 "2026-01"
+                const targetYM = `${viewYear}-${monthStr}`;
                 
                 const btn = document.createElement('div');
-                // 統計該年該月的紀錄數量
                 const count = allEntries.filter(e => e.date.startsWith(targetYM)).length;
                 
                 btn.className = 'month-btn';
@@ -135,6 +147,14 @@
             }
         }
 
+        function refreshUI() {
+            document.getElementById('displayYear').innerText = viewYear;
+            initCityList();
+            initCalendar();
+            renderDiaryWall();
+        }
+
+        // --- 抽籤功能 ---
         function drawLuck() {
             const resultDiv = document.getElementById('luck-result');
             let count = 0;
@@ -151,12 +171,7 @@
             }, 80);
         }
 
-        function refreshUI() {
-            initCityList();
-            initCalendar();
-            renderDiaryWall();
-        }
-
+        // --- 渲染日記牆 ---
         function renderDiaryWall() {
             const wall = document.getElementById('diaryWall');
             let entries = [];
@@ -166,7 +181,6 @@
                 entries = data[activeCity] || [];
                 titleText = `📍 ${activeCity} 的回憶`;
             } else if (activeMonth) {
-                // 篩選出該年月份的所有城市紀錄
                 Object.entries(data).forEach(([city, list]) => {
                     list.forEach(e => {
                         if (e.date.startsWith(activeMonth)) entries.push({...e, cityName: city});
@@ -191,7 +205,7 @@
             ` : `<h3>${titleText}</h3>`;
 
             const sorted = entries.sort((a,b) => new Date(b.date) - new Date(a.date));
-            if (sorted.length === 0 && !activeCity) html += `<div class="empty-hint"><p>這段時間還沒有紀錄喔！</p></div>`;
+            if (sorted.length === 0 && !activeCity) html += `<div class="empty-hint"><p>這個月還沒有冒險紀錄喔！</p></div>`;
 
             sorted.forEach(item => {
                 const entryId = item.id || new Date(item.date).getTime(); 
@@ -214,6 +228,7 @@
             wall.innerHTML = html;
         }
 
+        // --- 其他工具函式 ---
         function handlePhoto(input) {
             const file = input.files[0];
             if (!file) return;
@@ -230,15 +245,21 @@
             const date = document.getElementById('newDate').value;
             const note = document.getElementById('newNote').value;
             if (!date || !note) return alert("日期和心得都要寫喔！");
+            
+            // 自動根據使用者選的日期更新 viewYear
+            const entryYear = new Date(date).getFullYear();
+            viewYear = entryYear;
+
             if (!data[activeCity]) data[activeCity] = [];
             data[activeCity].push({ id: Date.now(), date, note, photo: tempPhoto, mood: selectedMood });
+            
             tempPhoto = "";
             localStorage.setItem('couple_photo_diary_v3', JSON.stringify(data));
             refreshUI();
         }
 
         function deleteEntry(cityName, entryId) {
-            if (!confirm("要刪除這段回憶嗎？")) return;
+            if (!confirm("要刪除嗎？")) return;
             data[cityName] = data[cityName].filter(e => (e.id || new Date(e.date).getTime()) !== entryId);
             localStorage.setItem('couple_photo_diary_v3', JSON.stringify(data));
             refreshUI();
@@ -250,6 +271,7 @@
             el.classList.add('selected');
         }
 
+        // 初次加載
         refreshUI();
     </script>
 </body>

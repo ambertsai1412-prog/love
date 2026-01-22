@@ -2,15 +2,20 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>我們的旅行冒險 ♡</title>
+    <title>我們的旅行冒險 ♡ 安全儲存版</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         :root { --soft-pink: #ffdae0; --heart-red: #ff5e78; --bg-color: #fff9fa; }
         body { font-family: "Microsoft JhengHei", sans-serif; background: var(--bg-color); color: #444; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         
-        .header { text-align: center; margin-bottom: 20px; }
+        /* 標題與備份區 */
+        .header { text-align: center; margin-bottom: 20px; width: 100%; max-width: 500px; position: relative; }
         .header h1 { color: var(--heart-red); }
+        .backup-tools { display: flex; gap: 10px; justify-content: center; margin-bottom: 15px; }
+        .tool-btn { background: white; border: 1px solid var(--soft-pink); padding: 5px 12px; border-radius: 15px; font-size: 12px; cursor: pointer; color: #888; transition: 0.3s; }
+        .tool-btn:hover { background: var(--soft-pink); color: white; }
 
+        /* 隨機抽籤區 */
         .random-box { 
             background: white; padding: 20px; border-radius: 20px; box-shadow: 0 8px 20px rgba(255, 94, 120, 0.2);
             margin-bottom: 30px; width: 100%; max-width: 500px; text-align: center; border: 2px solid var(--soft-pink);
@@ -20,17 +25,16 @@
 
         .main-content { display: flex; flex-wrap: wrap; gap: 20px; width: 100%; max-width: 1100px; }
 
+        /* 側欄與月曆 */
         .sidebar { flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 20px; }
         .city-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; background: white; padding: 15px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
         .city-btn { background: #f8f8f8; border: 1px solid #eee; padding: 10px 5px; border-radius: 10px; cursor: pointer; text-align: center; font-size: 13px; font-weight: bold; transition: 0.3s; }
         .city-btn.active { border: 2px solid var(--heart-red); background: white; color: var(--heart-red); }
         .city-btn.visited::after { content: "❤️"; font-size: 10px; margin-left: 2px; }
 
-        /* 月曆與年份切換器 */
         .calendar-box { background: white; padding: 15px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
         .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .year-btn { background: none; border: 1px solid var(--soft-pink); color: var(--heart-red); border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-weight: bold; }
-        .year-btn:hover { background: var(--soft-pink); }
+        .year-btn { background: none; border: 1px solid var(--soft-pink); color: var(--heart-red); border-radius: 50%; width: 30px; height: 30px; cursor: pointer; }
         .calendar-title { font-size: 16px; font-weight: bold; color: var(--heart-red); }
         
         .month-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
@@ -38,6 +42,7 @@
         .month-btn.has-data { background: #fff0f2; border-color: var(--soft-pink); font-weight: bold; }
         .month-btn.active { background: var(--heart-red); color: white; }
 
+        /* 日記區域 */
         .diary-wall { flex: 2; min-width: 350px; }
         .add-card { background: white; padding: 20px; border-radius: 20px; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-top: 5px solid var(--heart-red); }
         
@@ -62,6 +67,11 @@
 
     <div class="header">
         <h1>Our Love Story ♡</h1>
+        <div class="backup-tools">
+            <button class="tool-btn" onclick="exportData()">💾 下載備份 (換手機用)</button>
+            <button class="tool-btn" onclick="document.getElementById('importFile').click()">📤 匯入回憶</button>
+            <input type="file" id="importFile" hidden accept=".json" onchange="importData(this)">
+        </div>
     </div>
 
     <div class="random-box">
@@ -96,19 +106,51 @@
         const suggestions = ["去吃好吃的！", "找一間絕美咖啡廳", "來一趟大自然之旅", "去拍超多美照", "逛逛當地的夜市", "看海發呆一整個下午", "體驗在地手作課程", "找個浪漫景點放閃"];
         const moodList = ["😊", "🥰", "🤩", "🥳", "😚", "😋", "😤"];
         
-        // --- 狀態管理 ---
-        let viewYear = new Date().getFullYear(); // 目前切換到的年份
+        let viewYear = new Date().getFullYear();
         let activeCity = "";
         let activeMonth = ""; 
         let selectedMood = "😊";
         let data = JSON.parse(localStorage.getItem('couple_photo_diary_v3') || '{}');
         let tempPhoto = "";
 
-        // --- 初始化功能 ---
+        // --- 備份功能 ---
+        function exportData() {
+            if (Object.keys(data).length === 0) return alert("目前還沒有任何紀錄可以備份喔！");
+            const dataStr = JSON.stringify(data);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            const exportFileDefaultName = `我們的旅行回憶備份_${new Date().toLocaleDateString()}.json`;
+
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            alert("備份檔已下載！請妥善保存這個檔案。");
+        }
+
+        function importData(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (confirm("匯入將會取代目前的紀錄，確定要繼續嗎？")) {
+                        data = importedData;
+                        localStorage.setItem('couple_photo_diary_v3', JSON.stringify(data));
+                        refreshUI();
+                        alert("回憶已成功匯入！💖");
+                    }
+                } catch (err) {
+                    alert("檔案格式不正確，請選擇正確的備份檔。");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // --- 核心功能 ---
         function changeYear(delta) {
             viewYear += delta;
-            document.getElementById('displayYear').innerText = viewYear;
-            activeMonth = ""; // 切換年份時取消選取的月份
+            activeMonth = "";
             refreshUI();
         }
 
@@ -129,106 +171,76 @@
             const grid = document.getElementById('monthGrid');
             grid.innerHTML = "";
             const allEntries = Object.values(data).flat();
-
             for (let i = 1; i <= 12; i++) {
                 const monthStr = i < 10 ? `0${i}` : `${i}`;
                 const targetYM = `${viewYear}-${monthStr}`;
-                
                 const btn = document.createElement('div');
                 const count = allEntries.filter(e => e.date.startsWith(targetYM)).length;
-                
                 btn.className = 'month-btn';
                 if (count > 0) btn.classList.add('has-data');
                 if (activeMonth === targetYM) btn.classList.add('active');
-                
                 btn.innerHTML = `${i}月${count > 0 ? `<br><small>${count}次</small>` : ''}`;
                 btn.onclick = () => { activeCity = ""; activeMonth = targetYM; refreshUI(); };
                 grid.appendChild(btn);
             }
         }
 
-        function refreshUI() {
-            document.getElementById('displayYear').innerText = viewYear;
-            initCityList();
-            initCalendar();
-            renderDiaryWall();
-        }
-
-        // --- 抽籤功能 ---
         function drawLuck() {
             const resultDiv = document.getElementById('luck-result');
             let count = 0;
             const timer = setInterval(() => {
-                const randomTemp = cities[Math.floor(Math.random() * cities.length)];
-                resultDiv.innerText = randomTemp;
-                count++;
-                if (count > 12) {
+                resultDiv.innerText = cities[Math.floor(Math.random() * cities.length)];
+                if (++count > 12) {
                     clearInterval(timer);
-                    const finalCity = cities[Math.floor(Math.random() * cities.length)];
-                    const randomTip = suggestions[Math.floor(Math.random() * suggestions.length)];
-                    resultDiv.innerHTML = `✨ ${finalCity} ✨<br><span style="font-size:14px; color:#888; font-weight:normal;">${randomTip}</span>`;
+                    const city = cities[Math.floor(Math.random() * cities.length)];
+                    resultDiv.innerHTML = `✨ ${city} ✨<br><small style="font-weight:normal;color:#888">${suggestions[Math.floor(Math.random()*suggestions.length)]}</small>`;
                 }
             }, 80);
         }
 
-        // --- 渲染日記牆 ---
         function renderDiaryWall() {
             const wall = document.getElementById('diaryWall');
             let entries = [];
-            let titleText = "";
-
-            if (activeCity) {
-                entries = data[activeCity] || [];
-                titleText = `📍 ${activeCity} 的回憶`;
-            } else if (activeMonth) {
+            if (activeCity) entries = data[activeCity] || [];
+            else if (activeMonth) {
                 Object.entries(data).forEach(([city, list]) => {
-                    list.forEach(e => {
-                        if (e.date.startsWith(activeMonth)) entries.push({...e, cityName: city});
-                    });
+                    list.forEach(e => { if (e.date.startsWith(activeMonth)) entries.push({...e, cityName: city}); });
                 });
-                titleText = `🗓️ ${activeMonth} 的所有足跡`;
-            } else { return; }
+            } else return;
 
             let moodHtml = moodList.map(m => `<span class="mood-btn ${m === selectedMood ? 'selected' : ''}" onclick="setMood(this, '${m}')">${m}</span>`).join('');
-
             let html = activeCity ? `
                 <div class="add-card">
-                    <h3>${titleText}</h3>
+                    <h3>📍 ${activeCity}</h3>
                     <div class="mood-selector">${moodHtml}</div>
                     <img id="preview-img">
-                    <label class="photo-upload-label" for="fileInput">📷 上傳照片 (選填)</label>
+                    <label class="photo-upload-label" for="fileInput">📷 選擇照片 (選填)</label>
                     <input type="file" id="fileInput" hidden accept="image/*" onchange="handlePhoto(this)">
                     <input type="date" id="newDate" value="${new Date().toISOString().split('T')[0]}">
-                    <textarea id="newNote" rows="3" placeholder="今天心情如何？"></textarea>
+                    <textarea id="newNote" rows="3" placeholder="想對這次冒險說些什麼？"></textarea>
                     <button class="save-btn" onclick="addEntry()">儲存回憶</button>
-                </div>
-            ` : `<h3>${titleText}</h3>`;
+                </div>` : `<h3>🗓️ ${activeMonth} 回顧</h3>`;
 
             const sorted = entries.sort((a,b) => new Date(b.date) - new Date(a.date));
-            if (sorted.length === 0 && !activeCity) html += `<div class="empty-hint"><p>這個月還沒有冒險紀錄喔！</p></div>`;
+            if (sorted.length === 0 && !activeCity) html += `<div class="empty-hint"><p>尚未有紀錄</p></div>`;
 
             sorted.forEach(item => {
-                const entryId = item.id || new Date(item.date).getTime(); 
                 html += `
                     <div class="diary-card">
-                        <button class="del-btn" onclick="deleteEntry('${item.cityName || activeCity}', ${entryId})">×</button>
+                        <button class="del-btn" onclick="deleteEntry('${item.cityName || activeCity}', ${item.id})">×</button>
                         ${item.photo ? `<img src="${item.photo}" class="card-img">` : ''}
                         <div class="card-body">
                             <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <div style="color:var(--heart-red); font-weight:bold;">
-                                    📅 ${item.date} ${item.cityName ? `| 📍${item.cityName}` : ''}
-                                </div>
+                                <div style="color:var(--heart-red); font-weight:bold;">📅 ${item.date} ${item.cityName ? `| 📍${item.cityName}` : ''}</div>
                                 <div style="font-size:20px;">${item.mood || '😊'}</div>
                             </div>
                             <p style="white-space:pre-wrap; margin-top:10px; line-height:1.6;">${item.note}</p>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
             wall.innerHTML = html;
         }
 
-        // --- 其他工具函式 ---
         function handlePhoto(input) {
             const file = input.files[0];
             if (!file) return;
@@ -244,25 +256,16 @@
         function addEntry() {
             const date = document.getElementById('newDate').value;
             const note = document.getElementById('newNote').value;
-            if (!date || !note) return alert("日期和心得都要寫喔！");
-            
-            // 自動根據使用者選的日期更新 viewYear
-            const entryYear = new Date(date).getFullYear();
-            viewYear = entryYear;
-
+            if (!date || !note) return alert("請填寫完整資訊");
             if (!data[activeCity]) data[activeCity] = [];
             data[activeCity].push({ id: Date.now(), date, note, photo: tempPhoto, mood: selectedMood });
-            
-            tempPhoto = "";
-            localStorage.setItem('couple_photo_diary_v3', JSON.stringify(data));
-            refreshUI();
+            tempPhoto = ""; localStorage.setItem('couple_photo_diary_v3', JSON.stringify(data)); refreshUI();
         }
 
         function deleteEntry(cityName, entryId) {
-            if (!confirm("要刪除嗎？")) return;
-            data[cityName] = data[cityName].filter(e => (e.id || new Date(e.date).getTime()) !== entryId);
-            localStorage.setItem('couple_photo_diary_v3', JSON.stringify(data));
-            refreshUI();
+            if (!confirm("確定刪除？")) return;
+            data[cityName] = data[cityName].filter(e => e.id !== entryId);
+            localStorage.setItem('couple_photo_diary_v3', JSON.stringify(data)); refreshUI();
         }
 
         function setMood(el, mood) {
@@ -271,7 +274,11 @@
             el.classList.add('selected');
         }
 
-        // 初次加載
+        function refreshUI() {
+            document.getElementById('displayYear').innerText = viewYear;
+            initCityList(); initCalendar(); renderDiaryWall();
+        }
+
         refreshUI();
     </script>
 </body>

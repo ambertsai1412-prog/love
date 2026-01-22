@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>我們的旅行冒險 ♡</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        :root { --soft-pink: #ffdae0; --heart-red: #ff5e78; --bg-color: #fff9fa; }
+        body { font-family: "Microsoft JhengHei", sans-serif; background: var(--bg-color); color: #444; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        
+        .header { text-align: center; margin-bottom: 20px; }
+        .header h1 { color: var(--heart-red); }
+
+        /* 隨機抽籤區 */
+        .random-box { 
+            background: white; padding: 20px; border-radius: 20px; box-shadow: 0 8px 20px rgba(255, 94, 120, 0.2);
+            margin-bottom: 30px; width: 100%; max-width: 500px; text-align: center; border: 2px solid var(--soft-pink);
+        }
+        #luck-result { font-size: 1.5rem; font-weight: bold; color: var(--heart-red); margin: 15px 0; min-height: 40px; }
+        .spin-btn { 
+            background: var(--heart-red); color: white; border: none; padding: 12px 30px; 
+            border-radius: 50px; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.3s;
+        }
+        .spin-btn:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(255, 94, 120, 0.4); }
+
+        .main-content { display: flex; flex-wrap: wrap; gap: 20px; width: 100%; max-width: 1100px; }
+
+        /* 左側清單與右側日記 */
+        .city-sidebar { flex: 1; min-width: 280px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; background: white; padding: 15px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); height: fit-content; }
+        .city-btn { background: #f8f8f8; border: 1px solid #eee; padding: 12px 5px; border-radius: 10px; cursor: pointer; text-align: center; font-size: 14px; font-weight: bold; transition: 0.3s; }
+        .city-btn.active { border: 2px solid var(--heart-red); background: white; color: var(--heart-red); }
+        .city-btn.visited::after { content: " ❤️"; color: var(--heart-red); }
+
+        .diary-wall { flex: 2; min-width: 350px; }
+        .add-card { background: white; padding: 20px; border-radius: 20px; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-top: 5px solid var(--heart-red); }
+        
+        /* 表單元件 */
+        input[type="date"], textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; margin-bottom: 10px; font-family: inherit; }
+        
+        .photo-upload-label { display: block; background: #fdf0f2; border: 2px dashed var(--soft-pink); padding: 15px; text-align: center; border-radius: 10px; cursor: pointer; margin-bottom: 10px; }
+        #preview-img { width: 100%; max-height: 250px; object-fit: cover; border-radius: 10px; display: none; margin-bottom: 10px; }
+        
+        /* 日記卡片與刪除按鈕 */
+        .diary-card { background: white; border-radius: 20px; overflow: hidden; margin-bottom: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); position: relative; }
+        .card-img { width: 100%; max-height: 400px; object-fit: cover; }
+        .card-body { padding: 20px; }
+        .del-btn { 
+            position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.8); 
+            color: #888; border: none; width: 30px; height: 30px; border-radius: 50%; 
+            cursor: pointer; font-size: 18px; line-height: 30px; text-align: center; transition: 0.3s;
+        }
+        .del-btn:hover { background: var(--heart-red); color: white; }
+
+        .save-btn { background: var(--heart-red); color: white; border: none; padding: 12px; border-radius: 25px; cursor: pointer; width: 100%; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Our Love Story ♡</h1>
+    </div>
+
+    <div class="random-box">
+        <h3>✨ 下一站去哪裡？</h3>
+        <div id="luck-result">準備好冒險了嗎？</div>
+        <button class="spin-btn" onclick="drawLuck()">隨機抽取下一個目的地</button>
+    </div>
+
+    <div class="main-content">
+        <div class="city-sidebar" id="cityList"></div>
+        <div class="diary-wall" id="diaryWall">
+            <div style="background:white; padding:40px; border-radius:20px; text-align:center; color:#888;">
+                <h2>💞 點選左側縣市</h2>
+                <p>新增或回顧你們的甜蜜回憶</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const cities = ["基隆市", "台北市", "新北市", "桃園市", "新竹市", "新竹縣", "苗栗縣", "台中市", "彰化縣", "南投縣", "雲林縣", "嘉義市", "嘉義縣", "台南市", "高雄市", "屏東縣", "宜蘭縣", "花蓮縣", "台東縣", "澎湖縣", "金門縣", "馬祖"];
+        const suggestions = ["去吃好吃的！", "找一間絕美咖啡廳", "來一趟大自然之旅", "去拍超多美照", "逛逛當地的夜市", "看海發呆一整個下午", "體驗在地手作課程"];
+        
+        let activeCity = "";
+        let data = JSON.parse(localStorage.getItem('couple_photo_diary_v2') || '{}');
+        let tempPhoto = "";
+
+        function initCityList() {
+            const list = document.getElementById('cityList');
+            list.innerHTML = "";
+            cities.forEach(name => {
+                const btn = document.createElement('div');
+                btn.className = 'city-btn' + (data[name] && data[name].length > 0 ? ' visited' : '');
+                if(activeCity === name) btn.classList.add('active');
+                btn.innerText = name;
+                btn.onclick = () => selectCity(name);
+                list.appendChild(btn);
+            });
+        }
+        initCityList();
+
+        function drawLuck() {
+            const resultDiv = document.getElementById('luck-result');
+            const unvisited = cities.filter(c => !data[c] || data[c].length === 0);
+            
+            if (unvisited.length === 0) {
+                resultDiv.innerText = "太厲害了！全台灣都有你們的足跡 ❤️";
+                return;
+            }
+
+            resultDiv.innerText = "正在挑選浪漫地點...";
+            let count = 0;
+            const timer = setInterval(() => {
+                const randomTemp = unvisited[Math.floor(Math.random() * unvisited.length)];
+                resultDiv.innerText = randomTemp;
+                count++;
+                if (count > 10) {
+                    clearInterval(timer);
+                    const finalCity = unvisited[Math.floor(Math.random() * unvisited.length)];
+                    const randomTip = suggestions[Math.floor(Math.random() * suggestions.length)];
+                    resultDiv.innerHTML = `✨ ${finalCity} ✨<br><span style="font-size:14px; color:#888;">${randomTip}</span>`;
+                }
+            }, 100);
+        }
+
+        function selectCity(name) {
+            activeCity = name;
+            initCityList();
+            renderDiaryWall();
+        }
+
+        function renderDiaryWall() {
+            const wall = document.getElementById('diaryWall');
+            const entries = data[activeCity] || [];
+            let html = `
+                <div class="add-card">
+                    <h3>📍 新增在 ${activeCity} 的回憶</h3>
+                    <img id="preview-img">
+                    <label class="photo-upload-label" for="fileInput">📷 上傳這篇日記的照片</label>
+                    <input type="file" id="fileInput" hidden accept="image/*" onchange="handlePhoto(this)">
+                    <input type="date" id="newDate">
+                    <textarea id="newNote" rows="3" placeholder="紀錄這次旅行的心情..."></textarea>
+                    <button class="save-btn" onclick="addEntry()">儲存這份回憶</button>
+                </div>
+            `;
+
+            const sorted = [...entries].sort((a,b) => new Date(b.date) - new Date(a.date));
+            sorted.forEach(item => {
+                // 為了向下相容舊資料，如果沒有 id 就用 timestamp 代替
+                const entryId = item.id || new Date(item.date).getTime(); 
+                html += `
+                    <div class="diary-card">
+                        <button class="del-btn" onclick="deleteEntry('${activeCity}', ${entryId})">×</button>
+                        ${item.photo ? `<img src="${item.photo}" class="card-img">` : ''}
+                        <div class="card-body">
+                            <div style="color:var(--heart-red); font-weight:bold; font-size:14px;">📅 ${item.date}</div>
+                            <p style="white-space:pre-wrap; margin-top:10px;">${item.note}</p>
+                        </div>
+                    </div>
+                `;
+            });
+            wall.innerHTML = html;
+        }
+
+        function handlePhoto(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                tempPhoto = e.target.result;
+                document.getElementById('preview-img').src = tempPhoto;
+                document.getElementById('preview-img').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function addEntry() {
+            const date = document.getElementById('newDate').value;
+            const note = document.getElementById('newNote').value;
+            if (!date || !note || !tempPhoto) return alert("照片、日期、心得都要齊全喔！");
+
+            if (!data[activeCity]) data[activeCity] = [];
+            
+            // 新增 id 以便後續精準刪除
+            const newEntry = { 
+                id: Date.now(), 
+                date, 
+                note, 
+                photo: tempPhoto 
+            };
+            
+            data[activeCity].push(newEntry);
+            saveAndRefresh();
+            tempPhoto = "";
+        }
+
+        // 刪除功能邏輯
+        function deleteEntry(cityName, entryId) {
+            if (!confirm("確定要刪除這段甜蜜回憶嗎？(刪除後無法找回喔)")) return;
+            
+            // 過濾掉該 id 的日記
+            data[cityName] = data[cityName].filter(entry => {
+                const idToCheck = entry.id || new Date(entry.date).getTime();
+                return idToCheck !== entryId;
+            });
+
+            saveAndRefresh();
+        }
+
+        function saveAndRefresh() {
+            localStorage.setItem('couple_photo_diary_v2', JSON.stringify(data));
+            initCityList();
+            renderDiaryWall();
+        }
+    </script>
+</body>
+</html>

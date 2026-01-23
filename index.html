@@ -2,93 +2,108 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>我們的回憶地圖 ♡ 完整版</title>
+    <title>我們的回憶地圖 ♡ 佈局優化版</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
     <style>
-        :root { --soft-pink: #ffdae0; --heart-red: #ff5e78; --bg-color: #fff9fa; --gold: #fffde7; }
-        body { font-family: "Microsoft JhengHei", sans-serif; background: var(--bg-color); color: #444; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; }
-        .header { text-align: center; margin-bottom: 15px; width: 100%; max-width: 1000px; }
-        .nav-bar { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 15px; }
-        .btn { background: white; border: 1.5px solid #ff9db2; padding: 8px 15px; border-radius: 50px; font-size: 13px; cursor: pointer; font-weight: bold; color: #7d8597; transition: 0.2s; }
-        .btn:hover { background: #fff0f2; transform: translateY(-1px); }
+        :root { --soft-pink: #ffdae0; --heart-red: #ff5e78; --bg-color: #fff9fa; --gold: #fffde7; --sidebar-width: 320px; }
+        body { font-family: "Microsoft JhengHei", sans-serif; background: var(--bg-color); color: #444; margin: 0; padding: 0; }
+        
+        .top-nav { position: fixed; top: 0; width: 100%; height: 60px; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); display: flex; align-items: center; padding: 0 15px; box-shadow: 0 2px 10px rgba(255,192,203,0.15); z-index: 100; box-sizing: border-box; }
+        .menu-toggle { font-size: 24px; cursor: pointer; color: var(--heart-red); border: 2px solid var(--soft-pink); background: white; border-radius: 8px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+        .logo { font-family: 'Dancing Script', cursive; font-size: 24px; color: var(--heart-red); flex-grow: 1; text-align: center; }
+
+        .sidebar { position: fixed; top: 0; left: calc(-1 * var(--sidebar-width)); width: var(--sidebar-width); height: 100%; background: white; box-shadow: 5px 0 20px rgba(0,0,0,0.1); transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 200; overflow-y: auto; padding: 20px; box-sizing: border-box; }
+        .sidebar.active { left: 0; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); display: none; z-index: 150; backdrop-filter: blur(2px); }
+        .overlay.active { display: block; }
+
+        .card { background: white; padding: 15px; border-radius: 20px; border: 1.5px solid var(--soft-pink); margin-bottom: 15px; }
+        .btn { background: white; border: 1.5px solid #ff9db2; padding: 8px 12px; border-radius: 50px; font-size: 13px; cursor: pointer; font-weight: bold; color: #7d8597; transition: 0.2s; }
         .btn-main { background: var(--heart-red) !important; color: white !important; border: none; }
-        .merge-zone { background: white; padding: 5px 15px; border-radius: 50px; border: 1.5px solid var(--soft-pink); display: flex; align-items: center; gap: 5px; }
-        .merge-zone input { border: none; outline: none; font-size: 12px; width: 100px; }
-        .main-container { display: flex; flex-wrap: wrap; gap: 15px; width: 100%; max-width: 1000px; }
-        .side-bar { flex: 1; min-width: 280px; display: flex; flex-direction: column; gap: 15px; }
-        .content-area { flex: 2; min-width: 320px; }
-        .card { background: white; padding: 15px; border-radius: 20px; border: 2px solid var(--soft-pink); box-shadow: 0 4px 10px rgba(255,192,203,0.2); position: relative; }
-        .city-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+        
+        .city-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
         .city-item { background: #fffcfd; border: 1px solid #ffeef0; padding: 8px 2px; border-radius: 10px; cursor: pointer; text-align: center; font-size: 12px; font-weight: bold; position: relative; }
         .city-item.active { background: var(--heart-red); color: white; }
-        
-        /* 通用的愛心標記樣式（用於城市與月份） */
         .has-data::after { content: "❤️"; font-size: 9px; position: absolute; bottom: 2px; right: 2px; }
-        .active.has-data::after { filter: brightness(2); }
 
-        .lucky-box { background: var(--gold); border: 2px dashed #fdd835; }
-        .lucky-content { background: rgba(255,255,255,0.7); padding: 10px; border-radius: 10px; margin-top: 8px; font-size: 13px; min-height: 45px; line-height: 1.5; }
-        .diary-card { background: white; border-radius: 15px; overflow: hidden; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); position: relative; }
-        .action-btns { position: absolute; top: 10px; right: 10px; display: flex; gap: 5px; z-index: 5; }
-        .icon-btn { background: white; border: 1px solid #ffdae0; color: #ff5e78; border-radius: 8px; padding: 3px 8px; font-size: 11px; cursor: pointer; }
         .stat-val { font-size: 18px; color: var(--heart-red); font-weight: bold; }
-        textarea { width: 100%; border: 1px solid var(--soft-pink); border-radius: 10px; padding: 10px; box-sizing: border-box; resize: none; font-family: inherit; }
-        .collage-title { font-family: 'Dancing Script', cursive; font-size: 32px; color: var(--heart-red); }
-        .collage-footer { font-family: 'Dancing Script', cursive; font-size: 18px; color: #777; }
+        .lucky-content { background: rgba(255,255,255,0.7); padding: 10px; border-radius: 10px; margin-top: 8px; font-size: 13px; min-height: 40px; border: 1px solid rgba(0,0,0,0.03); }
+        
+        .main-content { margin-top: 80px; padding: 15px; max-width: 700px; margin-left: auto; margin-right: auto; }
+        .diary-card { background: white; border-radius: 20px; overflow: hidden; margin-bottom: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); border: 1px solid #eee; position: relative; }
+        .action-btns { position: absolute; top: 12px; right: 12px; display: flex; gap: 5px; z-index: 5; }
+        .icon-btn { background: rgba(255,255,255,0.9); border: 1px solid #ffdae0; color: #ff5e78; border-radius: 8px; padding: 5px 10px; font-size: 12px; cursor: pointer; }
+        textarea { width: 100%; border: 1px solid var(--soft-pink); border-radius: 12px; padding: 12px; box-sizing: border-box; resize: none; font-family: inherit; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 
-<div class="header">
-    <h1 style="color:var(--heart-red); margin: 10px 0;">Our Story Map ♡</h1>
-    <div class="nav-bar">
+<div class="top-nav">
+    <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+    <div class="logo">Our Story Map ♡</div>
+    <button class="btn btn-main" onclick="showCollage()" style="font-size: 12px;">✨ 年度拼貼</button>
+</div>
+
+<div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+
+<div class="sidebar" id="sidebar">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h3 style="margin:0; color:var(--heart-red);">選單面板</h3>
+        <span onclick="toggleMenu()" style="cursor:pointer; font-size: 20px;">✕</span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
         <button class="btn" onclick="exportJSON()">💾 備份</button>
         <button class="btn" onclick="document.getElementById('fIn').click()">📤 匯入</button>
         <input type="file" id="fIn" hidden onchange="importJSON(this)">
-        <button class="btn" onclick="copyCode()">🔗 複製代碼</button>
-        <div class="merge-zone">
-            <input type="text" id="mCode" placeholder="貼上代碼...">
-            <button class="btn" style="border:none; padding:2px 10px;" onclick="mergeCode()">合併</button>
+        <button class="btn" style="grid-column: span 2;" onclick="copyCode()">🔗 複製數據代碼</button>
+    </div>
+
+    <div class="card" style="padding: 12px; margin-bottom: 20px;">
+        <b style="font-size: 13px;">🔗 合併對方代碼</b>
+        <div style="display: flex; gap: 5px; margin-top: 8px;">
+            <input type="text" id="mCode" placeholder="貼上代碼..." style="flex:1; border: 1px solid var(--soft-pink); border-radius: 8px; padding: 5px 10px; font-size: 12px;">
+            <button class="btn btn-main" style="padding: 5px 10px;" onclick="mergeCode()">合併</button>
         </div>
-        <button class="btn btn-main" onclick="showCollage()">✨ 年度拼貼</button>
+    </div>
+
+    <div class="card" style="border-width: 2px;">
+        <b style="display:block; margin-bottom:10px;">📍 選擇城市</b>
+        <div class="city-grid" id="cityList"></div>
+    </div>
+
+    <div class="card" style="text-align:center;">
+        <div style="margin-bottom:10px;">
+            <button class="btn" style="padding:2px 8px;" onclick="changeY(-1)">‹</button>
+            <span id="yShow" style="font-weight:bold; margin:0 10px;">2026</span>
+            <button class="btn" style="padding:2px 8px;" onclick="changeY(1)">›</button>
+        </div>
+        <div id="monGrid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:5px;"></div>
+    </div>
+
+    <div class="card" style="background:var(--gold); border: 2px dashed #fdd835;">
+        <b>✈️ 下一站去哪裡？</b> <span style="float:right; cursor:pointer;" onclick="rndTravel()">🔄</span>
+        <div class="lucky-content" id="boxTravel">載入中...</div>
+    </div>
+    
+    <div class="card" style="background:#fff0f3;">
+        <b>💬 真心話挑戰</b> <span style="float:right; cursor:pointer;" onclick="rndTopic()">🔄</span>
+        <div class="lucky-content" id="boxTopic" style="color:#ff5e78;">載入中...</div>
+    </div>
+
+    <div class="card" style="background:#f0f7ff; border-color:#bcdbff; margin-bottom: 30px;">
+        <b>📊 <span id="statYear">2026</span> 旅遊回顧</b>
+        <div style="display:flex; justify-content:space-around; margin-top:10px; text-align:center;">
+            <div>城市<br><span id="statCity" class="stat-val">0</span></div>
+            <div>回憶<br><span id="statCount" class="stat-val">0</span></div>
+            <div>心情<br><span id="statMood" class="stat-val">0</span></div>
+        </div>
     </div>
 </div>
 
-<div class="main-container">
-    <div class="side-bar">
-        <div class="card"><div class="city-grid" id="cityList"></div></div>
-        
-        <div class="card" style="background:#f0f7ff; border-color:#bcdbff;">
-            <b>📊 <span id="statYear">2026</span> 旅遊回顧</b>
-            <div style="display:flex; justify-content:space-around; margin-top:10px; text-align:center;">
-                <div>城市<br><span id="statCity" class="stat-val">0</span></div>
-                <div>回憶<br><span id="statCount" class="stat-val">0</span></div>
-                <div>心情<br><span id="statMood" class="stat-val">0</span></div>
-            </div>
-        </div>
-
-        <div class="card lucky-box">
-            <b>✈️ 下一站去哪裡？</b> <span style="float:right; cursor:pointer; color:var(--heart-red);" onclick="rndTravel()">換一個</span>
-            <div class="lucky-content" id="boxTravel">載入中...</div>
-        </div>
-        <div class="card" style="background:#fff0f3;">
-            <b>💬 真心話挑戰</b> <span style="float:right; cursor:pointer; color:var(--heart-red);" onclick="rndTopic()">換一個</span>
-            <div class="lucky-content" id="boxTopic" style="color:#ff5e78;">載入中...</div>
-        </div>
-
-        <div class="card" style="text-align:center;">
-            <div style="margin-bottom:10px;">
-                <button class="btn" style="padding:2px 8px;" onclick="changeY(-1)">‹</button>
-                <span id="yShow" style="font-weight:bold; margin:0 10px;">2026</span>
-                <button class="btn" style="padding:2px 8px;" onclick="changeY(1)">›</button>
-            </div>
-            <div id="monGrid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:5px;"></div>
-        </div>
-    </div>
-    <div class="content-area" id="wall"></div>
-</div>
+<div class="main-content" id="wall"></div>
 
 <script>
     const S_KEY = 'love_map_vFinal';
@@ -99,56 +114,12 @@
     const cityKeys = Object.keys(citiesData);
     const topics = ["最近一次心動是什麼時候？", "最想跟我去哪個城市？", "我哪張照片你最喜歡？", "用三個詞形容我", "分享一個你對另一半的第一印象與現在的落差。","你最喜歡對方身上哪一個特質？","分享一個你最近覺得很幸福的小瞬間。","如果要用一種動物形容對方，你會選什麼？","你最想和我一起改掉的一個壞習慣是什麼？","你覺得我們之間最像的點是什麼？","有哪些事是因為我而開始嘗試的？","你覺得哪個瞬間，你覺得『嗯，就是這個人了』？","如果我們要選一個城市去流浪一週，你會選哪？","我們第一次見面你的感覺？"];
 
+    function toggleMenu() {
+        document.getElementById('sidebar').classList.toggle('active');
+        document.getElementById('overlay').classList.toggle('active');
+    }
+
     function save() { try{ localStorage.setItem(S_KEY, JSON.stringify(db)); return true; }catch(e){ alert("空間滿了！"); return false; } }
-    function exportJSON() { const blob = new Blob([JSON.stringify(db)], {type:"application/json"}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download="LoveMap.json"; a.click(); }
-    function importJSON(input) { const reader = new FileReader(); reader.onload=(e)=>{ db=JSON.parse(e.target.result); save(); render(); alert("匯入成功！"); }; reader.readAsText(input.files[0]); }
-    function copyCode() { navigator.clipboard.writeText(JSON.stringify(db)).then(()=>alert("代碼已複製")); }
-    function mergeCode() { try { const inc = JSON.parse(document.getElementById('mCode').value); Object.keys(inc).forEach(c => { if(!db[c]) db[c]=inc[c]; else inc[c].forEach(ni=>{ if(!db[c].some(oi=>oi.id===ni.id)) db[c].push(ni); }); }); save(); render(); alert("合併完成"); } catch(e) { alert("代碼錯誤"); } }
-
-    function procImg(input, isEdit = false) {
-        const r = new FileReader();
-        r.onload = (e) => {
-            const img = new Image();
-            img.onload = () => {
-                const cvs = document.createElement('canvas'); const MAX = 800; let w = img.width, h = img.height;
-                if(w > MAX) { h *= MAX/w; w = MAX; }
-                cvs.width = w; cvs.height = h; cvs.getContext('2d').drawImage(img, 0, 0, w, h);
-                const data = cvs.toDataURL('image/jpeg', 0.7);
-                if(isEdit) { document.getElementById('editPrev').src = data; document.getElementById('editPrev').style.display='block'; }
-                else { tmpImg = data; document.getElementById('preView').src = data; document.getElementById('preView').style.display = 'block'; }
-            };
-            img.src = e.target.result;
-        };
-        r.readAsDataURL(input.files[0]);
-    }
-
-    function add() {
-        const note = document.getElementById('newNote').value;
-        if(!note || !currCity) return alert("請選擇城市並填寫");
-        if(!db[currCity]) db[currCity] = [];
-        db[currCity].push({ id:Date.now(), date:document.getElementById('newDate').value, note, img:tmpImg, mood:selMood });
-        if(save()){ tmpImg=""; render(); }
-    }
-
-    function edit(c, id) { editingId = id; render(); }
-    function saveEdit(c, id) {
-        const item = db[c].find(i => i.id === id);
-        item.date = document.getElementById('editDate').value;
-        item.note = document.getElementById('editNote').value;
-        const newImg = document.getElementById('editPrev').src;
-        if(newImg && newImg.startsWith('data:')) item.img = newImg;
-        editingId = null; save(); render();
-    }
-    function del(c, id) { if(confirm("確定刪除？")){ db[c]=db[c].filter(i=>i.id!==id); save(); render(); } }
-
-    function updateStats() {
-        let citySet = new Set(), count = 0, moodCount = 0;
-        Object.entries(db).forEach(([c, arr]) => { arr.forEach(i => { if(i.date.startsWith(currYear)) { citySet.add(c); count++; moodCount++; } }); });
-        document.getElementById('statYear').innerText = currYear;
-        document.getElementById('statCity').innerText = citySet.size;
-        document.getElementById('statCount').innerText = count;
-        document.getElementById('statMood').innerText = moodCount;
-    }
 
     function render() {
         if(isCollage) return;
@@ -156,17 +127,17 @@
         let list = [];
         if(currCity) list = db[currCity] || [];
         else if(currMon) Object.entries(db).forEach(([c, arr]) => { arr.forEach(i=>{ if(i.date.startsWith(currMon)) list.push({...i, cityName:c}); }); });
-        else { wall.innerHTML = "<h2 style='text-align:center;color:#ccc;margin-top:50px;'>💞 點擊左側城市或月份</h2>"; updateSidebar(); updateStats(); return; }
+        else { wall.innerHTML = `<div style="text-align:center;color:#bbb;margin-top:100px;"><p style="font-size:40px; margin-bottom:10px;">🗺️</p><p>點擊左上角選單按鈕<br>開始記錄我們的故事</p></div>`; updateSidebar(); updateStats(); return; }
 
         let moods = ["😊","🥰","🥳","😭","😤"].map(m => `<span style="font-size:24px;cursor:pointer;opacity:${selMood===m?1:0.3}" onclick="selMood='${m}';render()">${m}</span>`).join(" ");
-        let html = currCity ? `<div class="card" style="margin-bottom:15px;"><b>📍 ${currCity}</b><br><input type="date" id="newDate" value="${new Date().toISOString().split('T')[0]}" style="width:100%;margin:10px 0;padding:5px;"><div style="display:flex;justify-content:space-around;margin-bottom:10px;">${moods}</div><input type="file" accept="image/*" onchange="procImg(this)"><br><img id="preView" style="width:100%;display:none;border-radius:10px;margin:10px 0;"><textarea id="newNote" rows="3" placeholder="在這裡寫下回憶..."></textarea><button class="btn btn-main" style="width:100%;margin-top:10px;" onclick="add()">儲存回憶</button></div>` : "";
+        let html = currCity ? `<div class="card"><b>📍 ${currCity}</b><br><input type="date" id="newDate" value="${new Date().toISOString().split('T')[0]}" style="width:100%;margin:10px 0;padding:8px;border:1px solid #ddd;border-radius:8px;"><div style="display:flex;justify-content:space-around;margin-bottom:10px;">${moods}</div><input type="file" accept="image/*" onchange="procImg(this)"><br><img id="preView" style="width:100%;display:none;border-radius:10px;margin:10px 0;"><textarea id="newNote" rows="3" placeholder="寫下此時此刻的心情..."></textarea><button class="btn btn-main" style="width:100%;margin-top:10px;" onclick="add()">儲存回憶</button></div>` : "";
 
         list.sort((a,b)=>new Date(b.date)-new Date(a.date)).forEach(i => {
             const cName = currCity || i.cityName;
             if(editingId === i.id) {
-                html += `<div class="diary-card" style="padding:15px; border:2px solid var(--heart-red);"><b>編輯回憶 - ${cName}</b><input type="date" id="editDate" value="${i.date}" style="width:100%; margin:10px 0;"><input type="file" accept="image/*" onchange="procImg(this, true)"><img id="editPrev" src="${i.img || ''}" style="width:100%; margin:10px 0; border-radius:10px; ${i.img?'':'display:none'}"><textarea id="editNote" rows="4">${i.note}</textarea><div style="display:flex; gap:10px; margin-top:10px;"><button class="btn btn-main" style="flex:1" onclick="saveEdit('${cName}', ${i.id})">更新</button><button class="btn" style="flex:1" onclick="editingId=null;render()">取消</button></div></div>`;
+                html += `<div class="diary-card" style="padding:15px;"><textarea id="editNote" rows="4">${i.note}</textarea><div style="display:flex; gap:10px; margin-top:10px;"><button class="btn btn-main" style="flex:1" onclick="saveEdit('${cName}', ${i.id})">更新</button><button class="btn" style="flex:1" onclick="editingId=null;render()">取消</button></div></div>`;
             } else {
-                html += `<div class="diary-card"><div class="action-btns"><button class="icon-btn" onclick="edit('${cName}', ${i.id})">✏️</button><button class="icon-btn" onclick="del('${cName}', ${i.id})">🗑️</button></div><div style="position:absolute;top:10px;left:10px;font-size:20px;">${i.mood}</div>${i.img ? `<img src="${i.img}" style="width:100%;">` : ""}<div style="padding:15px;"><b>${i.date} | ${cName}</b><p>${i.note}</p></div></div>`;
+                html += `<div class="diary-card"><div class="action-btns"><button class="icon-btn" onclick="edit('${cName}', ${i.id})">✏️</button><button class="icon-btn" onclick="del('${cName}', ${i.id})">🗑️</button></div><div style="position:absolute;top:10px;left:10px;font-size:20px;">${i.mood}</div>${i.img ? `<img src="${i.img}" style="width:100%;">` : ""}<div style="padding:15px;"><b>${i.date} | ${cName}</b><p style="margin:10px 0 0 0;">${i.note}</p></div></div>`;
             }
         });
         wall.innerHTML = html;
@@ -174,51 +145,42 @@
     }
 
     function updateSidebar() {
-        // 更新城市列表
         const cList = document.getElementById('cityList'); cList.innerHTML = "";
         cityKeys.forEach(c => {
             const hasData = db[c]?.length > 0;
             const d = document.createElement('div');
             d.className = `city-item ${currCity===c?'active':''} ${hasData?'has-data':''}`;
-            d.innerText = c; d.onclick = ()=>{ currCity=c; currMon=""; isCollage=false; editingId=null; render(); };
+            d.innerText = c; d.onclick = ()=>{ currCity=c; currMon=""; render(); toggleMenu(); };
             cList.appendChild(d);
         });
-
-        // 更新月份列表並檢查該月份是否有數據
         const mGrid = document.getElementById('monGrid'); mGrid.innerHTML = "";
-        
-        // 先找出當前年份所有有數據的月份
         let monthsWithData = new Set();
-        Object.values(db).flat().forEach(item => {
-            if(item.date.startsWith(currYear)) {
-                const month = item.date.split('-')[1]; // 取得 MM
-                monthsWithData.add(parseInt(month));
-            }
-        });
-
+        Object.values(db).flat().forEach(item => { if(item.date.startsWith(currYear)) monthsWithData.add(parseInt(item.date.split('-')[1])); });
         for(let i=1;i<=12;i++){
             const mStr = `${currYear}-${i<10?'0'+i:i}`;
-            const hasData = monthsWithData.has(i);
             const d = document.createElement('div');
-            d.className = `city-item ${currMon===mStr?'active':''} ${hasData?'has-data':''}`;
+            d.className = `city-item ${currMon===mStr?'active':''} ${monthsWithData.has(i)?'has-data':''}`;
             d.innerText = i+"月"; 
-            d.onclick = ()=>{ currMon=mStr; currCity=""; isCollage=false; editingId=null; render(); };
+            d.onclick = ()=>{ currMon=mStr; currCity=""; render(); toggleMenu(); };
             mGrid.appendChild(d);
         }
         document.getElementById('yShow').innerText = currYear;
     }
 
+    function mergeCode() { try { const inc = JSON.parse(document.getElementById('mCode').value); Object.keys(inc).forEach(c => { if(!db[c]) db[c]=inc[c]; else inc[c].forEach(ni=>{ if(!db[c].some(oi=>oi.id===ni.id)) db[c].push(ni); }); }); save(); render(); alert("合併完成"); } catch(e) { alert("代碼錯誤"); } }
     function rndTravel() { const c = cityKeys[Math.floor(Math.random()*cityKeys.length)]; document.getElementById('boxTravel').innerHTML = `💡 <b>${c}</b><br>${citiesData[c]}`; }
     function rndTopic() { document.getElementById('boxTopic').innerText = topics[Math.floor(Math.random()*topics.length)]; }
+    function procImg(input, isEdit = false) { const r = new FileReader(); r.onload = (e) => { const img = new Image(); img.onload = () => { const cvs = document.createElement('canvas'); const MAX = 800; let w = img.width, h = img.height; if(w > MAX) { h *= MAX/w; w = MAX; } cvs.width = w; cvs.height = h; cvs.getContext('2d').drawImage(img, 0, 0, w, h); const data = cvs.toDataURL('image/jpeg', 0.7); if(isEdit) { document.getElementById('editPrev').src = data; document.getElementById('editPrev').style.display='block'; } else { tmpImg = data; document.getElementById('preView').src = data; document.getElementById('preView').style.display = 'block'; } }; img.src = e.target.result; }; r.readAsDataURL(input.files[0]); }
+    function add() { const note = document.getElementById('newNote').value; if(!note || !currCity) return alert("請寫下內容"); if(!db[currCity]) db[currCity] = []; db[currCity].push({ id:Date.now(), date:document.getElementById('newDate').value, note, img:tmpImg, mood:selMood }); if(save()){ tmpImg=""; render(); } }
+    function edit(c, id) { editingId = id; render(); }
+    function del(c, id) { if(confirm("確定刪除？")){ db[c]=db[c].filter(i=>i.id!==id); save(); render(); } }
+    function updateStats() { let citySet = new Set(), count = 0, moodCount = 0; Object.entries(db).forEach(([c, arr]) => { arr.forEach(i => { if(i.date.startsWith(currYear)) { citySet.add(c); count++; moodCount++; } }); }); document.getElementById('statYear').innerText = currYear; document.getElementById('statCity').innerText = citySet.size; document.getElementById('statCount').innerText = count; document.getElementById('statMood').innerText = moodCount; }
     function changeY(v) { currYear+=v; render(); }
-
-    function showCollage() {
-        isCollage = true; let pics = [];
-        Object.values(db).flat().forEach(i=>{ if(i.date.startsWith(currYear) && i.img) pics.push(i.img); });
-        document.getElementById('wall').innerHTML = `<div style="text-align:center;"><button class="btn btn-main" onclick="downC()" style="margin-bottom:15px;">💾 下載拼貼 (Download)</button><div id="cArea" style="background:white; padding:30px 25px; border:1px solid #eee; width:400px; margin:auto; box-shadow:0 10px 30px rgba(0,0,0,0.1);"><div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px;">${pics.map(p=>`<img src="${p}" style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:2px;">`).join("")}</div><div style="margin-top:25px;"><div class="collage-title" style="margin:0;">Sweet Memories ${currYear}</div><div class="collage-footer" style="margin-top:5px; opacity:0.7;">The Story of Us.</div></div></div><p style="margin-top:20px; color:#999; font-size:13px; cursor:pointer;" onclick="isCollage=false;render()">← 返回地圖介面</p></div>`;
-    }
-
-    async function downC() { const c = await html2canvas(document.getElementById('cArea')); const a = document.createElement('a'); a.href=c.toDataURL(); a.download=`OurMemories_${currYear}.png`; a.click(); }
+    function exportJSON() { const blob = new Blob([JSON.stringify(db)], {type:"application/json"}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download="LoveMap.json"; a.click(); }
+    function importJSON(input) { const reader = new FileReader(); reader.onload=(e)=>{ db=JSON.parse(e.target.result); save(); render(); alert("匯入成功！"); }; reader.readAsText(input.files[0]); }
+    function copyCode() { navigator.clipboard.writeText(JSON.stringify(db)).then(()=>alert("代碼已複製")); }
+    function showCollage() { isCollage = true; let pics = []; Object.values(db).flat().forEach(i=>{ if(i.date.startsWith(currYear) && i.img) pics.push(i.img); }); document.getElementById('wall').innerHTML = `<div style="text-align:center;"><button class="btn btn-main" onclick="downC()" style="margin-bottom:15px;">💾 下載拼貼圖片</button><div id="cArea" style="background:white; padding:30px 25px; border:1px solid #eee; width:350px; margin:auto;"><div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px;">${pics.map(p=>`<img src="${p}" style="width:100%; aspect-ratio:1/1; object-fit:cover;">`).join("")}</div><div style="margin-top:25px;"><div style="font-family:'Dancing Script'; font-size:32px; color:var(--heart-red);">Sweet Memories ${currYear}</div></div></div><p style="margin-top:20px; color:#999; cursor:pointer;" onclick="isCollage=false;render()">← 返回地圖</p></div>`; }
+    async function downC() { const c = await html2canvas(document.getElementById('cArea')); const a = document.createElement('a'); a.href=c.toDataURL(); a.download=`Memories_${currYear}.png`; a.click(); }
 
     rndTravel(); rndTopic(); render();
 </script>
